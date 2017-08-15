@@ -1,0 +1,9 @@
+#!/bin/sh
+set -u
+set -e
+
+$_SITE_ROOT/bin/site build
+rsync -crvz --delete-after --delete-excluded  _site/ wormbytes:/var/www/wormbytes.ca/
+
+# Notify Google about the new sitemap
+wget -O /dev/null 'https://www.google.com/webmasters/tools/ping?sitemap=https%3A%2F%2Fwww.wormbytes.ca%2Fsitemap.xml'

@@ -1,0 +1,36 @@
+#! /usr/bin/env ruby
+#
+# Copy the file from the drafts folder, add the current date, and update the
+# filename.  Remove any commented out lines from the front matter.
+#
+
+now = Time.now
+draft = File.basename(ARGV[0], '.md')
+draft_filename = File.join('_drafts', "#{draft}.md")
+post_filename = File.join('_posts', "#{now.strftime('%Y-%m-%d')}-#{draft}.md")
+post = File.open(post_filename, 'w')
+
+state = :start
+
+open(draft_filename).readlines.each do |line|
+  if (state == :start || state == :in_front_matter) && line =~ /^---/
+    post.puts line
+
+    if state == :start
+      post.puts "date: #{now.strftime('%Y-%m-%d %H:%M:%S %:z')}"
+
+      state = :in_front_matter
+    else
+      state = :body
+    end
+  elsif state == :in_front_matter && (line =~ /^#/ || line =~ /^\s$/)
+    # Skip all the comment lines in the front matter
+    next
+  else
+    post.puts line
+  end
+end
+
+post.close
+
+File.unlink(draft_filename) if File.exist?(post_filename)
