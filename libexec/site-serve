@@ -3,4 +3,4 @@
 set -u
 set -e
 
-jekyll serve -D --watch
+hugo serve

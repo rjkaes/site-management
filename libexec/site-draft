@@ -2,5 +2,5 @@
 set -u
 set -e
 
-cp _drafts/template.md _drafts/${1}.md
-exec $EDITOR _drafts/${1}.md
+hugo new post/_${1}.md
+exec $EDITOR content/post/_${1}.md

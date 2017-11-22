@@ -2,35 +2,32 @@
 #
 # Copy the file from the drafts folder, add the current date, and update the
 # filename.  Remove any commented out lines from the front matter.
-#
+
+require 'yaml'
 
 now = Time.now
 draft = File.basename(ARGV[0], '.md')
-draft_filename = File.join('_drafts', "#{draft}.md")
-post_filename = File.join('_posts', "#{now.strftime('%Y-%m-%d')}-#{draft}.md")
-post = File.open(post_filename, 'w')
+draft_filename = File.join('content/post/', "_#{draft}.md")
+post_filename = File.join('content/post/', "#{draft}.md")
 
-state = :start
+draft_contents = File.read(draft_filename)
 
-open(draft_filename).readlines.each do |line|
-  if (state == :start || state == :in_front_matter) && line =~ /^---/
-    post.puts line
+# Split the contents into the YAML front matter and the content
+md = draft_contents.match(/^(?<metadata>---\s*\n.*?\n?)^(---\s*$\n?)/m)
+contents = md.post_match
+frontmatter = YAML.safe_load(md[:metadata])
 
-    if state == :start
-      post.puts "date: #{now.strftime('%Y-%m-%d %H:%M:%S %:z')}"
+modifications = {
+  'draft' => false,
+  'date' => now.strftime('%Y-%m-%dT%H:%M:%S%:z'),
+  'slug' => draft,
+}
 
-      state = :in_front_matter
-    else
-      state = :body
-    end
-  elsif state == :in_front_matter && (line =~ /^#/ || line =~ /^\s$/)
-    # Skip all the comment lines in the front matter
-    next
-  else
-    post.puts line
-  end
+File.open(post_filename, 'w') do |post|
+  post.puts frontmatter.merge(modifications).to_yaml
+  post.puts "---\n"
+  post.puts contents
 end
 
-post.close
-
 File.unlink(draft_filename) if File.exist?(post_filename)
+puts "Published #{post_filename}"

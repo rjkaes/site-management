@@ -3,4 +3,5 @@
 set -u
 set -e
 
-jekyll build
+rm -fr public/
+exec hugo
